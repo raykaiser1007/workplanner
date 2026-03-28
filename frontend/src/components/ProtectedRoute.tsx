@@ -7,6 +7,6 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children }: Props) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated())
-  return isAuthenticated ? <>{children}</> : <LoginPage />
+  const token = useAuthStore((s) => s.token)
+  return token ? <>{children}</> : <LoginPage />
 }
