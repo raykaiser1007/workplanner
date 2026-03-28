@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore'
 import { useBoardStore } from '../store/boardStore'
 import BoardCard from '../components/BoardCard'
 import BoardModal from '../components/BoardModal'
-import { Board } from '../types'
+import type { Board } from '../types'
 
 export default function DashboardPage() {
   const { user, logout } = useAuthStore()

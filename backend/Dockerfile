@@ -1,13 +1,15 @@
 FROM node:20-alpine
 
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --legacy-peer-deps
 
 COPY . .
-RUN npm run build
 RUN npx prisma generate
+RUN npm run build
 
 EXPOSE 3000
 

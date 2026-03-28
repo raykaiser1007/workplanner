@@ -25,7 +25,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // 보드 단건 조회
 router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id)
+  const id = parseInt(String(req.params.id))
   try {
     const board = await prisma.board.findFirst({
       where: { id, ownerId: req.userId },
@@ -69,7 +69,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // 보드 수정
 router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id)
+  const id = parseInt(String(req.params.id))
   const { title, description } = req.body
   if (!title) {
     res.status(400).json({ message: '보드 제목을 입력해주세요.' })
@@ -93,7 +93,7 @@ router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // 보드 삭제
 router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id)
+  const id = parseInt(String(req.params.id))
   try {
     const board = await prisma.board.findFirst({ where: { id, ownerId: req.userId } })
     if (!board) {

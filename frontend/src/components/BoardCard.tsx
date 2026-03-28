@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Board } from '../types'
+import type { Board } from '../types'
 
 interface Props {
   board: Board

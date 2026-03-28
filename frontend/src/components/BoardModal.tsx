@@ -1,5 +1,6 @@
-import { useState, useEffect, FormEvent } from 'react'
-import { Board } from '../types'
+import { useState, useEffect } from 'react'
+import type { FormEvent } from 'react'
+import type { Board } from '../types'
 
 interface Props {
   board?: Board
