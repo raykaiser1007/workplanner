@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  boards      Board[]
+  cardMembers CardMember[]
+}
+
+model Board {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownerId Int
+  owner   User   @relation(fields: [ownerId], references: [id])
+  lists   List[]
+}
+
+model List {
+  id        Int      @id @default(autoincrement())
+  title     String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  boardId Int
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards   Card[]
+}
+
+model Card {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  position    Int
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  listId  Int
+  list    List         @relation(fields: [listId], references: [id], onDelete: Cascade)
+  members CardMember[]
+  labels  CardLabel[]
+}
+
+model CardMember {
+  cardId Int
+  userId Int
+  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, userId])
+}
+
+model Label {
+  id    Int         @id @default(autoincrement())
+  name  String
+  color String
+  cards CardLabel[]
+}
+
+model CardLabel {
+  cardId  Int
+  labelId Int
+  card    Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, labelId])
+}
