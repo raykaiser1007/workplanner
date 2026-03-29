@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useBoardStore } from '../store/boardStore'
 import BoardCard from '../components/BoardCard'
@@ -6,6 +7,7 @@ import BoardModal from '../components/BoardModal'
 import type { Board } from '../types'
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const { user, logout } = useAuthStore()
   const { boards, loading, fetchBoards, createBoard, updateBoard, deleteBoard } = useBoardStore()
   const [showCreate, setShowCreate] = useState(false)
@@ -54,7 +56,7 @@ export default function DashboardPage() {
               <BoardCard
                 key={board.id}
                 board={board}
-                onClick={() => {}}
+                onClick={() => navigate(`/board/${board.id}`)}
                 onEdit={() => setEditTarget(board)}
                 onDelete={() => deleteBoard(board.id)}
               />

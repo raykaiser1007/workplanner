@@ -4,6 +4,8 @@ import dotenv from 'dotenv'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/users'
 import boardRoutes from './routes/boards'
+import listRoutes from './routes/lists'
+import cardRoutes from './routes/cards'
 
 dotenv.config()
 
@@ -20,6 +22,8 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/boards', boardRoutes)
+app.use('/api/boards/:boardId/lists', listRoutes)
+app.use('/api/boards/:boardId/lists/:listId/cards', cardRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

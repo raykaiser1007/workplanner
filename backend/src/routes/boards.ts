@@ -84,6 +84,10 @@ router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
     const updated = await prisma.board.update({
       where: { id },
       data: { title, description },
+      include: {
+        owner: { select: { id: true, name: true } },
+        _count: { select: { lists: true } },
+      },
     })
     res.json(updated)
   } catch {

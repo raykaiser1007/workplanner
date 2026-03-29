@@ -57,9 +57,9 @@ workplanner/
 | 1단계 | 프로젝트 기본 설정 (Frontend + Backend + DB + Docker) | 완료 |
 | 2단계 | 인증 (로그인 / 사용자 관리) | 완료 |
 | 3단계 | 보드 CRUD | 완료 |
-| 4단계 | 리스트 CRUD | **다음** |
-| 5단계 | 카드 CRUD | 대기 |
-| 6단계 | 드래그앤드롭 (카드/리스트 이동) | 대기 |
+| 4단계 | 리스트 CRUD | 완료 |
+| 5단계 | 카드 CRUD | 완료 |
+| 6단계 | 드래그앤드롭 (카드/리스트 이동) | **다음** |
 | 7단계 | 담당자 지정 | 대기 |
 | 8단계 | 마감일 설정 | 대기 |
 | 9단계 | 라벨/태그 | 대기 |
@@ -67,15 +67,8 @@ workplanner/
 ## 다음 작업 (재시작 후)
 1. Docker Desktop 실행 확인
 2. 전체 스택 실행: `docker compose up -d --build`
-3. DB 초기화 (migration 파일 없음): `docker compose exec backend npx prisma db push`
-4. 테스트 계정 생성:
-   ```bash
-   curl -X POST http://localhost:3000/api/auth/register \
-     -H "Content-Type: application/json" \
-     -d "{\"loginId\":\"admin\",\"password\":\"1234\",\"name\":\"관리자\"}"
-   ```
-5. http://localhost:3001 접속 → 로그인 → 대시보드 확인 (테스트 완료 2026-03-29)
-6. 다음: 4단계(리스트 CRUD) 진행
+3. http://localhost:3001 접속 → 로그인 → 보드 클릭 → 리스트/카드 CRUD 확인
+4. 다음: 6단계(드래그앤드롭) 진행
 
 ## 알려진 기술적 이슈 (해결 완료)
 - **TypeScript**: `verbatimModuleSyntax` 활성화 → 타입은 반드시 `import type { ... }` 사용
@@ -83,6 +76,11 @@ workplanner/
 - **Alpine + Prisma**: backend Dockerfile에 `RUN apk add --no-cache openssl` 필요
 - **DB 초기화**: migration 파일 없으므로 `prisma migrate deploy` 대신 `prisma db push` 사용
 - **Express params 타입**: `parseInt(req.params.id)` → `parseInt(String(req.params.id))`
+- **Prisma update() + _count**: `prisma.update()` 응답에는 `_count` 미포함 → PUT API도 `include: { _count: { select: ... } }` 추가 필요
+- **특정 서비스만 재빌드**: `docker compose up -d --build backend` (전체 빌드 불필요 시 활용)
+
+## UI 규칙
+- 카드 textarea: `Enter` = 줄바꿈, `Ctrl+Enter` = 제출, `Escape` = 취소
 
 ## 포트 설정
 
