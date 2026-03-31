@@ -34,7 +34,12 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
         lists: {
           orderBy: { position: 'asc' },
           include: {
-            cards: { orderBy: { position: 'asc' } },
+            cards: {
+              orderBy: { position: 'asc' },
+              include: {
+                members: { include: { user: { select: { id: true, name: true } } } },
+              },
+            },
           },
         },
       },
@@ -43,7 +48,16 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
       res.status(404).json({ message: '보드를 찾을 수 없습니다.' })
       return
     }
-    res.json(board)
+    res.json({
+      ...board,
+      lists: board.lists.map((list) => ({
+        ...list,
+        cards: list.cards.map((card) => ({
+          ...card,
+          members: card.members.map((m) => m.user),
+        })),
+      })),
+    })
   } catch {
     res.status(500).json({ message: '서버 오류가 발생했습니다.' })
   }

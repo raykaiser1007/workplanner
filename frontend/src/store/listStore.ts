@@ -13,6 +13,10 @@ interface ListStore {
   createCard: (boardId: number, listId: number, title: string) => Promise<void>
   updateCard: (boardId: number, listId: number, cardId: number, data: { title: string; description?: string }) => Promise<void>
   deleteCard: (boardId: number, listId: number, cardId: number) => Promise<void>
+  reorderCards: (boardId: number, listId: number, newCards: Card[]) => Promise<void>
+  moveCard: (boardId: number, cardId: number, fromListId: number, toListId: number, toPosition: number) => Promise<void>
+  addMember: (boardId: number, listId: number, cardId: number, user: { id: number; name: string }) => Promise<void>
+  removeMember: (boardId: number, listId: number, cardId: number, userId: number) => Promise<void>
 }
 
 export const useListStore = create<ListStore>((set, get) => ({
@@ -66,6 +70,75 @@ export const useListStore = create<ListStore>((set, get) => ({
       lists: get().lists.map((l) =>
         l.id === listId ? { ...l, cards: l.cards.filter((c) => c.id !== cardId) } : l
       ),
+    })
+  },
+
+  reorderCards: async (boardId, listId, newCards) => {
+    set({
+      lists: get().lists.map((l) =>
+        l.id === listId ? { ...l, cards: newCards } : l
+      ),
+    })
+    await api.patch(`/boards/${boardId}/lists/${listId}/cards/reorder`, {
+      cards: newCards.map((c) => ({ id: c.id, position: c.position })),
+    })
+  },
+
+  addMember: async (boardId, listId, cardId, user) => {
+    set({
+      lists: get().lists.map((l) =>
+        l.id === listId
+          ? { ...l, cards: l.cards.map((c) =>
+              c.id === cardId && !c.members.find((m) => m.id === user.id)
+                ? { ...c, members: [...c.members, user] }
+                : c
+            )}
+          : l
+      ),
+    })
+    await api.post(`/boards/${boardId}/lists/${listId}/cards/${cardId}/members`, { userId: user.id })
+  },
+
+  removeMember: async (boardId, listId, cardId, userId) => {
+    set({
+      lists: get().lists.map((l) =>
+        l.id === listId
+          ? { ...l, cards: l.cards.map((c) =>
+              c.id === cardId
+                ? { ...c, members: c.members.filter((m) => m.id !== userId) }
+                : c
+            )}
+          : l
+      ),
+    })
+    await api.delete(`/boards/${boardId}/lists/${listId}/cards/${cardId}/members/${userId}`)
+  },
+
+  moveCard: async (boardId, cardId, fromListId, toListId, toPosition) => {
+    const lists = get().lists
+    const fromList = lists.find((l) => l.id === fromListId)!
+    const card = fromList.cards.find((c) => c.id === cardId)!
+    set({
+      lists: lists.map((l) => {
+        if (l.id === fromListId) {
+          return {
+            ...l,
+            cards: l.cards
+              .filter((c) => c.id !== cardId)
+              .map((c, idx) => ({ ...c, position: idx })),
+          }
+        }
+        if (l.id === toListId) {
+          const destCards = [...l.cards]
+          destCards.splice(toPosition, 0, { ...card, listId: toListId, position: toPosition })
+          return { ...l, cards: destCards.map((c, idx) => ({ ...c, position: idx })) }
+        }
+        return l
+      }),
+    })
+    await api.patch(`/boards/${boardId}/lists/${fromListId}/cards/${cardId}/move`, {
+      toListId,
+      position: toPosition,
     })
   },
 }))

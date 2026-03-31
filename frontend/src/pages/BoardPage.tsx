@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import type { DropResult } from '@hello-pangea/dnd'
 import { useAuthStore } from '../store/authStore'
 import { useListStore } from '../store/listStore'
 import { api } from '../lib/api'
@@ -10,7 +12,7 @@ export default function BoardPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { lists, setLists, createList, updateList, deleteList } = useListStore()
+  const { lists, setLists, createList, updateList, deleteList, reorderLists, reorderCards, moveCard } = useListStore()
   const [board, setBoard] = useState<Board | null>(null)
   const [loading, setLoading] = useState(true)
   const [addingList, setAddingList] = useState(false)
@@ -32,6 +34,35 @@ export default function BoardPage() {
     }
     load()
   }, [boardId, navigate, setLists])
+
+  function handleDragEnd(result: DropResult) {
+    const { source, destination, type } = result
+    if (!destination) return
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return
+
+    if (type === 'LIST') {
+      const reordered = [...lists]
+      const [moved] = reordered.splice(source.index, 1)
+      reordered.splice(destination.index, 0, moved)
+      const newLists = reordered.map((l, idx) => ({ ...l, position: idx }))
+      setLists(newLists)
+      reorderLists(boardId, newLists.map((l) => ({ id: l.id, position: l.position })))
+    } else {
+      const fromListId = parseInt(source.droppableId)
+      const toListId = parseInt(destination.droppableId)
+      const cardId = parseInt(result.draggableId.replace('card-', ''))
+      if (fromListId === toListId) {
+        const list = lists.find((l) => l.id === fromListId)!
+        const reordered = [...list.cards]
+        const [moved] = reordered.splice(source.index, 1)
+        reordered.splice(destination.index, 0, moved)
+        const newCards = reordered.map((c, idx) => ({ ...c, position: idx }))
+        reorderCards(boardId, fromListId, newCards)
+      } else {
+        moveCard(boardId, cardId, fromListId, toListId, destination.index)
+      }
+    }
+  }
 
   async function handleAddList() {
     const title = newListTitle.trim()
@@ -62,16 +93,30 @@ export default function BoardPage() {
         </button>
       </header>
 
-      <main className="flex-1 p-4 flex items-start gap-3 overflow-x-auto">
-        {lists.map((list) => (
-          <ListColumn
-            key={list.id}
-            list={list}
-            boardId={boardId}
-            onUpdate={(listId, title) => updateList(boardId, listId, title)}
-            onDelete={(listId) => deleteList(boardId, listId)}
-          />
-        ))}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="board" type="LIST" direction="horizontal">
+          {(provided) => (
+            <main
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="flex-1 p-4 flex items-start gap-3 overflow-x-auto"
+            >
+              {lists.map((list, index) => (
+                <Draggable key={list.id} draggableId={`list-${list.id}`} index={index}>
+                  {(provided) => (
+                    <div ref={provided.innerRef} {...provided.draggableProps} className="flex-shrink-0">
+                      <ListColumn
+                        list={list}
+                        boardId={boardId}
+                        dragHandleProps={provided.dragHandleProps}
+                        onUpdate={(listId, title) => updateList(boardId, listId, title)}
+                        onDelete={(listId) => deleteList(boardId, listId)}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
 
         {addingList ? (
           <div className="bg-gray-100 rounded-lg w-64 flex-shrink-0 p-2">
@@ -109,7 +154,10 @@ export default function BoardPage() {
             + 리스트 추가
           </button>
         )}
-      </main>
+            </main>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   )
 }

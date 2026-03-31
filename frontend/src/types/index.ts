@@ -29,4 +29,5 @@ export interface Card {
   position: number
   dueDate?: string
   listId: number
+  members: { id: number; name: string }[]
 }
