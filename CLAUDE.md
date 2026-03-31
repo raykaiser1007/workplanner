@@ -99,6 +99,7 @@ workplanner/
 - 기능별 순차 개발 (한 번에 전체 코딩 금지)
 - 개발 중 기능 추가/삭제 가능
 - 외부 서비스 의존성 최소화 (폐쇄망 환경 고려)
+- git push 전에 반드시 pull(rebase) 후 push: `git pull --rebase origin main && git push origin main`
 
 ## GitHub
 - Repository: https://github.com/raykaiser1007/workplanner.git
